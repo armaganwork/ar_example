@@ -1,31 +1,4 @@
-// import 'package:ar_example/pages/home_page.dart';
-// import 'package:flutter/material.dart';
-
-// void main() {
-//   WidgetsFlutterBinding.ensureInitialized();
-
-//   runApp(const MyApp());
-// }
-
-// class MyApp extends StatelessWidget {
-//   const MyApp({super.key});
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return MaterialApp(
-//       title: 'Flutter AR App',
-//       debugShowCheckedModeBanner: false,
-//       theme: ThemeData(primarySwatch: Colors.deepPurple),
-//       home: const MyHomePage(),
-//     );
-//   }
-// }
-
-import 'dart:async';
-
-import 'package:ar_flutter_plugin_flutterflow/ar_flutter_plugin.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 
 import 'page/object_gestures_page.dart';
 
@@ -42,34 +15,7 @@ class MyApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MyApp> {
-  String _platformVersion = 'Unknown';
   static const String _title = 'AR Plugin Demo';
-
-  @override
-  void initState() {
-    super.initState();
-    initPlatformState();
-  }
-
-  // Platform messages are asynchronous, so we initialize in an async method.
-  Future<void> initPlatformState() async {
-    String platformVersion;
-    // Platform messages may fail, so we use a try/catch PlatformException.
-    try {
-      platformVersion = await ArFlutterPlugin.platformVersion;
-    } on PlatformException {
-      platformVersion = 'Failed to get platform version.';
-    }
-
-    // If the widget was removed from the tree while the asynchronous platform
-    // message was in flight, we want to discard the reply rather than calling
-    // setState to update our non-existent appearance.
-    if (!mounted) return;
-
-    setState(() {
-      _platformVersion = platformVersion;
-    });
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -78,14 +24,15 @@ class _MyAppState extends State<MyApp> {
         appBar: AppBar(
           title: const Text(_title),
         ),
-        body: Padding(  
-          padding: const EdgeInsets.all(16.0),
-          child: Column(children: [
-            Text('Running on: $_platformVersion\n'),
-            const Expanded(
-              child: ExampleList(),
-            ),
-          ]),
+        body: const Padding(
+          padding: EdgeInsets.all(16.0),
+          child: Column(
+            children: [
+              Expanded(
+                child: ExampleList(),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -98,34 +45,21 @@ class ExampleList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final examples = [
-      Example(
+      ObjectModel(
         'Object Transformation Gestures',
-        'Rotate and Pan Objects',
+        'Rotate, Pan and Scale objects.',
         () => Navigator.push(context, MaterialPageRoute(builder: (context) => const ObjectGesturesWidget())),
       ),
-
-      // Example(
-      //     'Cloud Anchors',
-      //     'Place and retrieve 3D objects using the Google Cloud Anchor API',
-      //     () => Navigator.push(context,
-      //         MaterialPageRoute(builder: (context) => CloudAnchorWidget()))),
-      // Example(
-      //     'External Model Management',
-      //     'Similar to Cloud Anchors example, but uses external database to choose from available 3D models',
-      //     () => Navigator.push(
-      //         context,
-      //         MaterialPageRoute(
-      //             builder: (context) => ExternalModelManagementWidget())))
     ];
     return ListView(
-      children: examples.map((example) => ExampleCard(example: example)).toList(),
+      children: examples.map((example) => Model3DItem(example: example)).toList(),
     );
   }
 }
 
-class ExampleCard extends StatelessWidget {
-  const ExampleCard({super.key, required this.example});
-  final Example example;
+class Model3DItem extends StatelessWidget {
+  const Model3DItem({super.key, required this.example});
+  final ObjectModel example;
 
   @override
   build(BuildContext context) {
@@ -144,9 +78,43 @@ class ExampleCard extends StatelessWidget {
   }
 }
 
-class Example {
-  const Example(this.name, this.description, this.onTap);
+class ObjectModel {
+  const ObjectModel(this.name, this.description, this.onTap);
   final String name;
   final String description;
   final Function onTap;
 }
+
+// import 'package:flutter/material.dart';
+// import 'package:model_viewer_plus/model_viewer_plus.dart';
+
+// void main() => runApp(const MyApp());
+
+// class MyApp extends StatelessWidget {
+//   const MyApp({super.key});
+
+//   @override
+//   Widget build(BuildContext context) {
+//     return MaterialApp(
+//       debugShowCheckedModeBanner: false,
+//       home: Scaffold(
+//         appBar: AppBar(title: const Text('Model Viewer')),
+//         body: SizedBox(
+//           height: MediaQuery.of(context).size.height - kToolbarHeight,
+//           child: const ModelViewer(
+//             src: 'assets/Astronaut.glb',
+//             ar: true,
+//             // backgroundColor: Color.fromARGB(0xFF, 0xEE, 0xEE, 0xEE),
+//             // alt: 'A 3D model of an astronaut',
+//             // arModes: ['scene-viewer', 'webxr', 'quick-look'],
+//             // autoRotate: false,
+//             // // iosSrc: 'https://modelviewer.dev/shared-assets/models/Astronaut.usdz',
+//             // disableZoom: false,
+//             // cameraControls: true,
+//             // disablePan: false,
+//           ),
+//         ),
+//       ),
+//     );
+//   }
+// }

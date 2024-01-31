@@ -1,5 +1,3 @@
-// ignore_for_file: avoid_print
-
 import 'package:ar_flutter_plugin_flutterflow/datatypes/config_planedetection.dart';
 import 'package:ar_flutter_plugin_flutterflow/datatypes/hittest_result_types.dart';
 import 'package:ar_flutter_plugin_flutterflow/datatypes/node_types.dart';
@@ -26,14 +24,25 @@ class ObjectGesturesWidget extends StatefulWidget {
 }
 
 class _ObjectGesturesWidgetState extends State<ObjectGesturesWidget> {
+  /// ARSessionManager provides interactions callbacks to interact with real world.
+  /// For example, detection of planes, surfaces. Tapping on the detected surfaces,
+  /// adding nodes to that surfaces and so on.
   ARSessionManager? arSessionManager;
+
+  /// ARObjectManager to manipulate 3D model. Provides some callback functions, related to rotation, pan etc.
   ARObjectManager? arObjectManager;
+
+  /// ARSessionManager provides interactions callbacks to interact with real world.
+  /// For example, detection of planes, surfaces. Tapping on the detected surfaces,
+  /// adding nodes to that surfaces and so on.
   ARAnchorManager? arAnchorManager;
 
   List<ARNode> nodes = [];
   List<ARAnchor> anchors = [];
   List<String> selectedNode = [];
 
+  ////////////////////////////////////////////////////////////////////////
+  /// Scaling variables to manipulate scale feature.
   double sX = 0.2;
   double sY = 0.2;
   double sZ = 0.2;
@@ -49,9 +58,7 @@ class _ObjectGesturesWidgetState extends State<ObjectGesturesWidget> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Object Transformation Gestures'),
-      ),
+      appBar: AppBar(title: const Text('Object Transformation Gestures')),
       body: Stack(
         children: [
           ARView(
@@ -76,16 +83,6 @@ class _ObjectGesturesWidgetState extends State<ObjectGesturesWidget> {
                       child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          // SizedBox(
-                          //   height: 40,
-                          //   child: CupertinoButton(
-                          //     padding: const EdgeInsets.symmetric(vertical: 0, horizontal: 20),
-                          //     color: CupertinoColors.systemBrown,
-                          //     onPressed: onRemoveEverything,
-                          //     child: const Text("Remove Everything"),
-                          //   ),
-                          // ),
-
                           Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
@@ -100,9 +97,6 @@ class _ObjectGesturesWidgetState extends State<ObjectGesturesWidget> {
                                             sX = sX + sX * 0.02;
                                             sY = sY + sY * 0.02;
                                             sZ = sZ + sZ * 0.02;
-                                            // node.scale.x = node.scale.x + node.scale.x * 0.02;
-                                            // node.scale.y = node.scale.y + node.scale.y * 0.02;
-                                            // node.scale.z = node.scale.z + node.scale.z * 0.02;
 
                                             node.scale = Vector3(sX, sY, sZ);
                                           });
@@ -119,9 +113,7 @@ class _ObjectGesturesWidgetState extends State<ObjectGesturesWidget> {
                                             sX = sX - sX * 0.02;
                                             sY = sY - sY * 0.02;
                                             sZ = sZ - sZ * 0.02;
-                                            // node.scale.x = node.scale.x + node.scale.x * 0.02;
-                                            // node.scale.y = node.scale.y + node.scale.y * 0.02;
-                                            // node.scale.z = node.scale.z + node.scale.z * 0.02;
+
                                             node.scale = Vector3(sX, sY, sZ);
                                           });
                                         }
@@ -215,14 +207,9 @@ class _ObjectGesturesWidgetState extends State<ObjectGesturesWidget> {
     );
   }
 
-  void onARViewCreated(
-    ARSessionManager arSessionManager,
-    ARObjectManager arObjectManager,
-    ARAnchorManager arAnchorManager,
-    ARLocationManager arLocationManager,
-  ) {
-    this.arSessionManager = arSessionManager;
+  void onARViewCreated(ARSessionManager arSessionManager, ARObjectManager arObjectManager, ARAnchorManager arAnchorManager, ARLocationManager arLocationManager) {
     this.arObjectManager = arObjectManager;
+    this.arSessionManager = arSessionManager;
     this.arAnchorManager = arAnchorManager;
 
     this.arSessionManager?.onInitialize(
@@ -237,8 +224,6 @@ class _ObjectGesturesWidgetState extends State<ObjectGesturesWidget> {
 
     this.arSessionManager?.onPlaneOrPointTap = onPlaneOrPointTapped;
 
-    // this.arSessionManager?.onPlaneDetected = onPlaneDetected;
-
     this.arObjectManager?.onInitialize;
     this.arObjectManager?.onPanStart = onPanStarted;
     this.arObjectManager?.onPanChange = onPanChanged;
@@ -251,7 +236,7 @@ class _ObjectGesturesWidgetState extends State<ObjectGesturesWidget> {
   }
 
   Future<void> onRemoveEverything() async {
-    for (var anchor in anchors) {
+    for (final anchor in anchors) {
       arAnchorManager?.removeAnchor(anchor);
     }
     anchors = [];
@@ -263,10 +248,6 @@ class _ObjectGesturesWidgetState extends State<ObjectGesturesWidget> {
     });
   }
 
-  // void onPlaneDetected(int data) {
-  //   print("Received total number of Planes $data");
-  // }
-
   Future<void> onPlaneOrPointTapped(List<ARHitTestResult> hitTestResults) async {
     final singleHitTestResult = hitTestResults.firstWhere((hitTestResult) => hitTestResult.type == ARHitTestResultType.point);
     final newAnchor = ARPlaneAnchor(transformation: singleHitTestResult.worldTransform);
@@ -274,7 +255,7 @@ class _ObjectGesturesWidgetState extends State<ObjectGesturesWidget> {
     if (didAddAnchor!) {
       anchors.add(newAnchor);
 
-      // Add note to anchor
+      // Create node with the selected 3D model.
       final newNode = ARNode(
         type: NodeType.localGLTF2,
         uri: selectedModel,
@@ -284,13 +265,16 @@ class _ObjectGesturesWidgetState extends State<ObjectGesturesWidget> {
       );
 
       bool? didAddNodeToAnchor = await arObjectManager?.addNode(newNode, planeAnchor: newAnchor);
-      if (didAddNodeToAnchor!) {
-        nodes.add(newNode);
+
+      if (didAddNodeToAnchor != null) {
+        if (didAddNodeToAnchor) {
+          nodes.add(newNode);
+        } else {
+          arSessionManager?.onError = onError;
+        }
       } else {
         arSessionManager?.onError = onError;
       }
-    } else {
-      arSessionManager?.onError = onError;
     }
   }
 
@@ -336,4 +320,9 @@ class _ObjectGesturesWidgetState extends State<ObjectGesturesWidget> {
     */
     rotatedNode.transform = newTransform;
   }
+
+  // Uncomment the following command if you want to place plain object on the surface.
+  // void onPlaneDetected(int data) {
+  //   print("Received total number of Planes $data");
+  // }
 }
